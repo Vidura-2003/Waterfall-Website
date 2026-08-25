@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cascade | Sri Lankan Waterfalls Travel Guide</title>
+<meta name="description" content="An interactive travel guide to Sri Lanka's most beautiful waterfalls — maps, accommodations, weather, and safety guidance.">
+
+<!-- Google Fonts: Fraunces (display, organic serif that echoes falling water) + Manrope (clean body) + JetBrains Mono (data/stat readouts) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Leaflet.js for the interactive map section -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================
+     NAVIGATION — sticky, translucent, blurred backdrop
+============================================= -->
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a href="#top" class="nav__brand">
+      <span class="nav__brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v9M12 11l-5 9h10l-5-9Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      Cascade
+    </a>
+
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#explore">Waterfalls</a>
+      <a href="#map">Map</a>
+      <a href="#stay">Stay</a>
+      <a href="#weather">Weather</a>
+      <a href="#safety">Safety</a>
+    </nav>
+
+    <div class="nav__actions">
+      <button class="btn btn--ghost nav__saved" id="openSavedBtn" aria-haspopup="dialog" aria-controls="savedModal">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Saved Trip</span>
+        <span class="nav__saved-count" id="savedCount">0</span>
+      </button>
+      <button class="nav__burger" id="burgerBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown menu -->
+  <nav class="nav__mobile" id="mobileMenu" aria-label="Mobile">
+    <a href="#explore">Waterfalls</a>
+    <a href="#map">Map</a>
+    <a href="#stay">Stay</a>
+    <a href="#weather">Weather</a>
+    <a href="#safety">Safety</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ============================================
+       HERO — full-bleed autoplay slider of iconic falls
+  ============================================= -->
+  <section class="hero" id="hero" aria-label="Featured waterfalls">
+    <div class="hero__slides" id="heroSlides">
+      <!-- Slides are injected by script.js from the waterfalls dataset,
+           but a first slide is written statically so the hero never
+           shows blank content while JS loads. -->
+      <div class="hero__slide is-active" data-index="0">
+        <img src="https://images.unsplash.com/photo-1546587348-d12660c30c50?auto=format&fit=crop&w=1800&q=80" alt="Bambarakanda Falls cascading through highland forest">
+        <div class="hero__scrim"></div>
+      </div>
+    </div>
+
+    <div class="hero__content">
+      <p class="eyebrow">A field guide to falling water</p>
+      <h1 class="hero__title">Sri Lanka, <em>told</em><br>in waterfalls</h1>
+      <p class="hero__sub">Six of the island's most extraordinary cascades — with maps, trail difficulty, nearby stays, and the safety notes locals actually give.</p>
+      <div class="hero__cta-row">
+        <a href="#explore" class="btn btn--primary">Explore the falls</a>
+        <a href="#map" class="btn btn--outline-light">View the map</a>
+      </div>
+    </div>
+
+    <div class="hero__controls">
+      <button class="hero__arrow" id="heroPrev" aria-label="Previous slide">‹</button>
+      <div class="hero__dots" id="heroDots"></div>
+      <button class="hero__arrow" id="heroNext" aria-label="Next slide">›</button>
+    </div>
+
+    <a href="#stats" class="hero__scroll-cue" aria-label="Scroll down">
+      <span></span>
+    </a>
+  </section>
+
+  <!-- ============================================
+       STATS STRIP — signature "elevation profile" bars.
+       Bar height is driven by each fall's actual drop, so the
+       strip doubles as a comparative height chart, not decoration.
+  ============================================= -->
+  <section class="stats" id="stats">
+    <div class="stats__intro">
+      <h2>Measured in the drop</h2>
+      <p>Every waterfall here is drawn to scale against the others — the bar height <em>is</em> the data.</p>
+    </div>
+    <div class="stats__chart" id="statsChart" role="img" aria-label="Comparative chart of waterfall heights">
+      <!-- populated by script.js -->
+    </div>
+  </section>
+
+  <!-- ============================================
+       EXPLORE — search, multi-filter, and card grid
+  ============================================= -->
+  <section class="explore" id="explore">
+    <div class="section-head">
+      <p class="eyebrow">The collection</p>
+      <h2>Find your waterfall</h2>
+      <p class="section-lede">Search by name, or narrow the list by province, difficulty, and the season you're travelling in.</p>
+    </div>
+
+    <div class="filter-bar" role="search">
+      <div class="filter-bar__search">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="text" id="searchInput" placeholder="Search waterfalls, e.g. Diyaluma…" aria-label="Search waterfalls by name">
+      </div>
+
+      <div class="filter-bar__selects">
+        <select id="provinceFilter" aria-label="Filter by province">
+          <option value="all">All provinces</option>
+        </select>
+        <select id="difficultyFilter" aria-label="Filter by difficulty">
+          <option value="all">Any difficulty</option>
+          <option value="Easy">Easy</option>
+          <option value="Moderate">Moderate</option>
+          <option value="Hard">Hard</option>
+        </select>
+        <select id="seasonFilter" aria-label="Filter by best season">
+          <option value="all">Any season</option>
+        </select>
+        <button class="btn btn--ghost" id="resetFilters" type="button">Reset</button>
+      </div>
+    </div>
+
+    <p class="filter-bar__count" id="resultCount" aria-live="polite"></p>
+
+    <div class="card-grid" id="cardGrid">
+      <!-- Waterfall cards injected by script.js -->
+    </div>
+
+    <p class="empty-state" id="emptyState" hidden>No waterfalls match those filters — try widening your search.</p>
+  </section>
+
+  <!-- ============================================
+       MAP — Leaflet map with a marker per waterfall
+  ============================================= -->
+  <section class="map-section" id="map">
+    <div class="section-head section-head--light">
+      <p class="eyebrow">Getting there</p>
+      <h2>Waterfalls, on the map</h2>
+      <p class="section-lede">Every marker links back to full trail and safety details. Tap a pin, then get walking or driving directions.</p>
+    </div>
+    <div class="map-wrap">
+      <div id="leafletMap" aria-label="Map of Sri Lankan waterfalls"></div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       ACCOMMODATIONS — nearby stays + inquiry system
+  ============================================= -->
+  <section class="stay" id="stay">
+    <div class="section-head">
+      <p class="eyebrow">Where to stay</p>
+      <h2>Nearby accommodations</h2>
+      <p class="section-lede">A short list of stays near each falls area — pick one and send a direct inquiry.</p>
+    </div>
+
+    <div class="stay__group-tabs" id="stayTabs" role="tablist" aria-label="Filter accommodations by waterfall area"></div>
+    <div class="stay-grid" id="stayGrid"></div>
+  </section>
+
+  <!-- ============================================
+       WEATHER — placeholder forecast widget
+  ============================================= -->
+  <section class="weather" id="weather">
+    <div class="section-head">
+      <p class="eyebrow">Before you go</p>
+      <h2>Regional weather snapshot</h2>
+      <p class="section-lede">Simulated forecast data for a feel of conditions — swap in a live weather API (e.g. Open-Meteo) for production use.</p>
+    </div>
+    <div class="weather-grid" id="weatherGrid"></div>
+  </section>
+
+  <!-- ============================================
+       SAFETY — interactive responsible-travel checklist
+  ============================================= -->
+  <section class="safety" id="safety">
+    <div class="section-head section-head--light">
+      <p class="eyebrow">Travel responsibly</p>
+      <h2>Safety &amp; responsible travel checklist</h2>
+      <p class="section-lede">Check items off as you prepare. Your progress is saved automatically on this device.</p>
+    </div>
+
+    <div class="safety__wrap">
+      <div class="safety__checklist">
+        <div class="safety__progress">
+          <div class="safety__progress-bar"><div class="safety__progress-fill" id="safetyProgressFill"></div></div>
+          <span id="safetyProgressLabel">0 of 0 complete</span>
+        </div>
+        <ul id="safetyList" class="safety__list"></ul>
+      </div>
+
+      <aside class="safety__emergency">
+        <h3>Emergency contacts</h3>
+        <ul>
+          <li><span>Police Emergency</span><a href="tel:119">119</a></li>
+          <li><span>Tourist Police</span><a href="tel:1912">1912</a></li>
+          <li><span>Ambulance / Suwa Seriya</span><a href="tel:1990">1990</a></li>
+          <li><span>Disaster Management Centre</span><a href="tel:117">117</a></li>
+        </ul>
+        <p class="safety__note">Save these numbers before you set off — signal near falls and highland trails is often unreliable.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================
+       CTA / newsletter-style closer
+  ============================================= -->
+  <section class="closer">
+    <div class="closer__inner">
+      <h2>Your saved trip travels with you</h2>
+      <p>Bookmark waterfalls as you browse — they're stored right on this device, ready whenever you plan the route.</p>
+      <a href="#explore" class="btn btn--primary">Start bookmarking</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================
+     FOOTER
+============================================= -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <span class="nav__brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v9M12 11l-5 9h10l-5-9Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <p>Cascade — an independent, unofficial guide to Sri Lanka's waterfalls. Built as a learning project.</p>
+    </div>
+    <div class="footer__cols">
+      <div>
+        <h4>Guide</h4>
+        <a href="#explore">Waterfalls</a>
+        <a href="#map">Map</a>
+        <a href="#stay">Stay</a>
+      </div>
+      <div>
+        <h4>Prepare</h4>
+        <a href="#weather">Weather</a>
+        <a href="#safety">Safety checklist</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer__fine">Heights, locations and travel notes are approximate and meant for general orientation — verify locally before hiking. Photos are Unsplash placeholders standing in for original photography.</p>
+</footer>
+
+<!-- ============================================
+     MODAL: Waterfall detail (gallery, description, safety)
+============================================= -->
+<div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" hidden>
+  <div class="modal modal--detail">
+    <button class="modal__close" id="detailModalClose" aria-label="Close dialog">&times;</button>
+    <div class="modal__gallery">
+      <img id="detailMainImg" src="" alt="">
+      <div class="modal__thumbs" id="detailThumbs"></div>
+    </div>
+    <div class="modal__body">
+      <div class="modal__badges" id="detailBadges"></div>
+      <h3 id="detailModalTitle"></h3>
+      <p class="modal__meta" id="detailMeta"></p>
+      <p class="modal__desc" id="detailDesc"></p>
+
+      <div class="modal__block">
+        <h4>Best time to visit</h4>
+        <p id="detailBestTime"></p>
+      </div>
+      <div class="modal__block">
+        <h4>Safety guidelines</h4>
+        <ul id="detailSafety"></ul>
+      </div>
+
+      <div class="modal__actions">
+        <button class="btn btn--primary" id="detailBookmarkBtn">Save to trip</button>
+        <a class="btn btn--outline" id="detailMapLink" href="#map">Get directions</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: Booking / contact inquiry
+============================================= -->
+<div class="modal-overlay" id="inquiryModal" role="dialog" aria-modal="true" aria-labelledby="inquiryModalTitle" hidden>
+  <div class="modal modal--inquiry">
+    <button class="modal__close" id="inquiryModalClose" aria-label="Close dialog">&times;</button>
+    <h3 id="inquiryModalTitle">Send an inquiry</h3>
+    <p class="modal__meta" id="inquiryStayName"></p>
+
+    <div class="modal__contact-options">
+      <a href="#" id="whatsappLink" target="_blank" rel="noopener" class="btn btn--whatsapp">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.6-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.2-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.4.1-.2 0-.4 0-.5-.1-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.8.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.2-.3-.2-.5-.3Z"/><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 20.2 12 8.2 8.2 0 0 1 12 20.2Z"/></svg>
+        WhatsApp (simulated)
+      </a>
+    </div>
+
+    <form id="inquiryForm">
+      <label>Your name
+        <input type="text" name="name" required placeholder="Full name">
+      </label>
+      <label>Email
+        <input type="email" name="email" required placeholder="you@example.com">
+      </label>
+      <label>Check-in date
+        <input type="date" name="checkin">
+      </label>
+      <label>Message
+        <textarea name="message" rows="3" placeholder="Number of guests, questions, special requests…"></textarea>
+      </label>
+      <button type="submit" class="btn btn--primary">Send inquiry (demo)</button>
+      <p class="modal__form-note" id="inquiryFormNote" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL: Saved trip drawer
+============================================= -->
+<div class="modal-overlay" id="savedModal" role="dialog" aria-modal="true" aria-labelledby="savedModalTitle" hidden>
+  <div class="modal modal--saved">
+    <button class="modal__close" id="savedModalClose" aria-label="Close dialog">&times;</button>
+    <h3 id="savedModalTitle">Your saved trip</h3>
+    <p class="modal__meta">Stored locally in this browser via <code>localStorage</code>.</p>
+    <ul class="saved-list" id="savedList"></ul>
+    <p class="empty-state" id="savedEmpty" hidden>Nothing saved yet — tap the bookmark icon on any waterfall card.</p>
+  </div>
+</div>
+
+<!-- Toast for lightweight confirmations (bookmark added, form sent, etc.) -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="script.js"></script>
+</body>
+</html>
